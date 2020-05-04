@@ -219,24 +219,32 @@ namespace CRMSolutionExplorer
         }
         private void tsbSLoadSolution_Click(object sender, EventArgs e)
         {
-            if(Service == null)
+            try
             {
-                MessageBox.Show($"Please connect to CRM first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
+                if (Service == null)
+                {
+                    MessageBox.Show($"Please connect to CRM first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                tsbSClonePatch.Enabled = false;
+                tsbSMergePatch.Enabled = false;
+                tsbSDeletePatch.Enabled = false;
+
+                if (this.targetService != null && selectedTRow != null)
+                {
+                    LoadSolution(Service, dgvTarget, "Target");
+                    return;
+                }
+
+                if (this.Service != null || selectedSRow != null)
+                    LoadSolution(this.Service, dgvSource, "Source");
             }
-
-            tsbSClonePatch.Enabled = false;
-            tsbSMergePatch.Enabled = false;
-            tsbSDeletePatch.Enabled = false;
-
-            if (this.targetService != null && selectedTRow != null)
+            catch (Exception ex)
             {
-                LoadSolution(Service, dgvTarget, "Target");
-                return;
+                MessageBox.Show(this,
+                    "Error(tsbSLoadSolution_Click): " + ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-            if (this.Service != null || selectedSRow != null)
-                LoadSolution(this.Service, dgvSource, "Source");
         }
 
         private void txtSearch_MouseHover(object sender, EventArgs e)
@@ -378,7 +386,7 @@ namespace CRMSolutionExplorer
                 selectedRows.Add(row);
                 EnableButton(dgv, row, tsbSClonePatch, tsbSMergePatch, tsbSDeletePatch);
             }
-            
+
             // to avoid confusion and make it simple... if the selected row not matches with the stored rows then clear it...
             if (dgv.SelectedRows.Count != selectedRows.Count)
             {
@@ -621,109 +629,142 @@ namespace CRMSolutionExplorer
 
         private void tsbSClonePath_Click(object sender, EventArgs e)
         {
-            if (selectedSRow != null)
+            try
             {
-                if (Service == null)
+                if (selectedSRow != null)
                 {
-                    MessageBox.Show($"Please connect to CRM first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
+                    if (Service == null)
+                    {
+                        MessageBox.Show($"Please connect to CRM first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+                    CloneMergePatch(Service, dgvSource, selectedSRow, "Clone Patch - Source", (dgvSource.SelectedRows.Count > 1));
                 }
-                CloneMergePatch(Service, dgvSource, selectedSRow, "Clone Patch - Source", (dgvSource.SelectedRows.Count > 1));
-            }
-            else if (selectedTRow != null)
-            {
-                if (targetService == null) AddAdditionalOrganization();
+                else if (selectedTRow != null)
+                {
+                    if (targetService == null) AddAdditionalOrganization();
 
-                if (targetService != null)
-                    CloneMergePatch(targetService, dgvTarget, selectedTRow, "Clone Patch - Target", (dgvTarget.SelectedRows.Count > 1));
+                    if (targetService != null)
+                        CloneMergePatch(targetService, dgvTarget, selectedTRow, "Clone Patch - Target", (dgvTarget.SelectedRows.Count > 1));
+                }
+                else
+                {
+                    MessageBox.Show($"Select Source/Target row's first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show($"Select Source/Target row's first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this,
+                    "Error(tsbSClonePath_Click): " + ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void tsbSMergePatch_Click(object sender, EventArgs e)
         {
-            if (selectedSRow != null)
+            try
             {
-                if (Service == null)
+                if (selectedSRow != null)
                 {
-                    MessageBox.Show($"Please connect to CRM first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
+                    if (Service == null)
+                    {
+                        MessageBox.Show($"Please connect to CRM first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    if (selectedSRow == null) return;
+                    CloneMergePatch(Service, dgvSource, selectedSRow, "Merge Patch - Source", (dgvSource.SelectedRows.Count > 1));
                 }
+                else if (selectedTRow != null)
+                {
+                    if (targetService == null) AddAdditionalOrganization();
 
-                if (selectedSRow == null) return;
-                CloneMergePatch(Service, dgvSource, selectedSRow, "Merge Patch - Source", (dgvSource.SelectedRows.Count > 1));
+                    if (targetService != null)
+                        CloneMergePatch(targetService, dgvTarget, selectedTRow, "Merge Patch - Target", (dgvTarget.SelectedRows.Count > 1));
+                }
+                else
+                {
+                    MessageBox.Show($"Select Source/Target row's first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
-            else if (selectedTRow != null)
+            catch (Exception ex)
             {
-                if (targetService == null) AddAdditionalOrganization();
-
-                if (targetService != null)
-                    CloneMergePatch(targetService, dgvTarget, selectedTRow, "Merge Patch - Target", (dgvTarget.SelectedRows.Count > 1));
-            }
-            else
-            {
-                MessageBox.Show($"Select Source/Target row's first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this,
+                    "Error(tsbSMergePatch_Click): " + ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void tsbSDeletePatch_Click(object sender, EventArgs e)
         {
-            if (selectedSRow != null)
+            try
             {
-                var result = MessageBox.Show("Do you really want to delete this patch?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
-                if (result == DialogResult.No) return;
+                if (selectedSRow != null)
+                {
+                    var result = MessageBox.Show("Do you really want to delete this patch?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                    if (result == DialogResult.No) return;
 
+                    if (Service == null)
+                    {
+                        MessageBox.Show($"Please connect to CRM first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    DeletePatch(Service, selectedSRow, "Delete Patch - Source");
+                    tsbSDeletePatch.Enabled = false;
+                }
+                else if (selectedTRow != null)
+                {
+                    var result = MessageBox.Show("Do you really want to delete this patch?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                    if (result == DialogResult.No) return;
+
+                    if (targetService == null) AddAdditionalOrganization();
+
+                    DeletePatch(targetService, selectedTRow, "Delete Patch - Target");
+                    tsbSDeletePatch.Enabled = false;
+                }
+                else
+                {
+                    MessageBox.Show($"Select Source/Target row's first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this,
+                    "Error(tsbSDeletePatch_Click): " + ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void tsbCopySource2Target_Click(object sender, EventArgs e)
+        {
+            try
+            {
                 if (Service == null)
                 {
                     MessageBox.Show($"Please connect to CRM first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
-                DeletePatch(Service, selectedSRow, "Delete Patch - Source");
-                tsbSDeletePatch.Enabled = false;
-            }
-            else if(selectedTRow != null)
-            {
-                var result = MessageBox.Show("Do you really want to delete this patch?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
-                if (result == DialogResult.No) return;
-
                 if (targetService == null) AddAdditionalOrganization();
 
-                DeletePatch(targetService, selectedTRow, "Delete Patch - Target");
-                tsbSDeletePatch.Enabled = false;
+                if (this.Service == null || targetService == null) return;
+
+                // move solution source to target
+                if (selectedSRow == null && selectedTRow == null)
+                {
+                    MessageBox.Show($"Please select source/target solution to copy!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                if (selectedSRow != null)
+                    MoveSolution(Service, targetService, dgvTarget, selectedSRow, "Source", "Target", (dgvSource.SelectedRows.Count > 1));
+                else if (selectedTRow != null)
+                    MoveSolution(targetService, Service, dgvSource, selectedTRow, "Target", "Source", (dgvTarget.SelectedRows.Count > 1));
+
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show($"Select Source/Target row's first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this,
+                    "Error(tsbCopySource2Target_Click): " + ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
-
-        private void tsbCopySource2Target_Click(object sender, EventArgs e)
-        {
-            if (Service == null)
-            {
-                MessageBox.Show($"Please connect to CRM first!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            if (targetService == null) AddAdditionalOrganization();
-
-            if (this.Service == null || targetService == null) return;
-
-            // move solution source to target
-            if (selectedSRow == null && selectedTRow == null)
-            {
-                MessageBox.Show($"Please select source/target solution to copy!", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
-            if (selectedSRow != null)
-                MoveSolution(Service, targetService, dgvTarget,  selectedSRow, "Source", "Target", (dgvSource.SelectedRows.Count > 1));
-            else if (selectedTRow != null)
-                MoveSolution(targetService, Service, dgvSource, selectedTRow, "Target", "Source", (dgvTarget.SelectedRows.Count > 1));
         }
 
         private void MoveSolution(IOrganizationService service, IOrganizationService tService, DataGridView dgv, DataGridViewRow row, string msg, string dMsg, bool isMulti = false)
@@ -806,28 +847,36 @@ namespace CRMSolutionExplorer
 
         private void tsbPublishAll_Click(object sender, EventArgs e)
         {
-            if (Service != null)
+            try
             {
-                var result = MessageBox.Show($"Do you really want to publish all (Source) [{ConnectionDetail.ConnectionName}]?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
-                if (result == DialogResult.Yes)
+                if (Service != null)
                 {
-                    PublishAll(Service, selectedSRow, "Source");
+                    var result = MessageBox.Show($"Do you really want to publish all (Source) [{ConnectionDetail.ConnectionName}]?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                    if (result == DialogResult.Yes)
+                    {
+                        PublishAll(Service, selectedSRow, "Source");
+                    }
+                }
+
+                if (targetService != null)
+                {
+                    var result = MessageBox.Show($"Do you really want to publish all (Target) [{AdditionalConnectionDetails.FirstOrDefault().ConnectionName}]?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+                    if (result == DialogResult.Yes)
+                    {
+                        PublishAll(targetService, selectedTRow, "Target");
+                    }
                 }
             }
-
-            if (targetService != null)
+            catch (Exception ex)
             {
-                var result = MessageBox.Show($"Do you really want to publish all (Target) [{AdditionalConnectionDetails.FirstOrDefault().ConnectionName}]?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
-                if (result == DialogResult.Yes)
-                {
-                    PublishAll(targetService, selectedTRow, "Target");
-                }
+                MessageBox.Show(this,
+                    "Error(tsbPublishAll_Click): " + ex.ToString(), "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void tsbAboutMe_Click(object sender, EventArgs e)
         {
-            MessageBox.Show($@"Hi... I'm Murali.{Environment.NewLine}{Environment.NewLine}Working for an Institution called CEWA.{Environment.NewLine}I'm a CRM Developer.{Environment.NewLine}You can reach me at [murali.tk@gmail.com].{Environment.NewLine}Please let me know if you find any issues/needs enhancement.{Environment.NewLine}{Environment.NewLine}Thanks for using this tool!", "About Me", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show($@"Hi All...Thanks for using this tool.{Environment.NewLine}{Environment.NewLine}This plugin will help you to do some basic tasks related to MS CRM Solutions. You can do Patch/Merge/Update/Delete Patches, Copy and Publish Solutions across environment!.{Environment.NewLine}{Environment.NewLine}I'm Murali...I'm working for an Institution called CEWA. I'm a CRM Developer. You can reach me at [murali.tk@gmail.com].{Environment.NewLine}{Environment.NewLine}Please let me know if you find any issues/needs enhancement.", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

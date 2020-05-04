@@ -32,8 +32,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>
-    </ApplicationIcon>
+    <ApplicationIcon>32x32.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>false</SignAssembly>
@@ -215,11 +214,12 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="32x32.ico" />
     <Content Include="Images\32x32.ico" />
     <Content Include="Images\32x32.png" />
     <Content Include="Images\80x80.png" />
     <Content Include="Images\About.jpg" />
-    <Content Include="Images\Close.jpg" />
+    <Content Include="Images\close.png" />
     <Content Include="Images\Connect.jpg" />
     <Content Include="Images\Copy.jpg" />
     <Content Include="Images\Delete.jpg" />
@@ -230,10 +230,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>IF $(ConfigurationName) == Debug (
-      IF NOT EXIST Plugins mkdir Plugins
-     move /Y $(TargetFileName) Plugins
-      )</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.  
